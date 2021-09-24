@@ -1,0 +1,5 @@
+Amazon DynamoDB Time to Live (TTL) allows you to define a per-item timestamp to determine when an item is no longer needed. Shortly after the date and time of the specified timestamp, DynamoDB deletes the item from your table without consuming any write throughput. TTL is provided at no extra cost as a means to reduce stored data volume by retaining only the items that remain current for your workload’s needs.
+
+To use TTL, first define a specific attribute in which to store the TTL expiration timestamp. After you enable TTL on the table, a background process automatically and continuously evaluates the expiry status of each item in the table based on the value stored in the user-defined TTL attribute.
+
+The background process compares the current time, in Unix epoch time format in seconds, to the value stored in the user-defined TTL attribute of each item. If the attribute is a Number data type, the attribute's value is a timestamp in Unix epoch time format in seconds, and the timestamp value is older than the current time, the item is set to expired. A second background process scans for expired items and deletes them within 48 hours.

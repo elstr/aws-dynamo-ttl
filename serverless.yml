@@ -1,0 +1,59 @@
+service: pruebas-dynamo-ttl
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  lambdaHashingVersion: 20201221
+  profile: pruebas
+  timeout: 30 # API Gateway is limited to 30 seconds
+  region: ${opt:region, 'us-west-2'}
+  stage: ${opt:stage, 'qa'}
+  deploymentBucket:
+    name: pruebas-dynamo-ttl
+
+functions:
+  scheduler:
+    handler: src/handlers/scheduler.handler
+    Policies:
+    - Version: 2012-10-17
+      Statement:
+        - Effect: Allow
+          Action:
+          - dynamodb:GetItem
+          - dynamodb:PutItem
+          - dynamodb:UpdateItem
+          - dynamodb:Query
+          - dynamodb:Scan
+          Resource: !Join [ "", [ !GetAtt JobsTable.Arn, "*" ]]
+    events:
+      - http:
+          path: /scheduler
+          method: post
+  mailer:
+    handler: src/handlers/mailer.handler
+
+resources: # CloudFormation template syntax
+  Resources:
+    deliveryScheduleTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: deliveryScheduleTable
+        TimeToLiveSpecification:
+          AttributeName: schedule_date
+          Enabled: true
+        AttributeDefinitions:
+          - AttributeName: "id"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: "id"
+            KeyType: "HASH"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+package:
+  excludeDevDependencies: true
+  exclude:
+    - .env.*
+    - git_key
+    - node_modules/aws*

@@ -1,0 +1,16 @@
+{
+  "name": "aws-dynamo-ttl",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy:qa": "rm -rf .serverless && npx serverless deploy --aws-profile pruebas --stage qa --region us-west-2 --verbose"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "moment": "^2.29.1",
+    "serverless": "^2.60.0"
+  }
+}
