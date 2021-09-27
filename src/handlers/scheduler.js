@@ -1,24 +1,24 @@
 const AWS = require('aws-sdk')
-const moment = require('moment')
+const dynamo = new AWS.DynamoDB.DocumentClient({ region: 'us-west-2' })
 
-const dynamo = new AWS.DynamoDB.DocumentClient({ region: 'us-west-1' })
 exports.handler = async (event) => {
   try {
-    const schedule = (travelTime = moment().add(10, 'minutes').format('hh:mm A'))
-
-    var params = {
+    const params = {
+      TableName: 'deliveries-ttl',
       Item: {
+        id: Math.floor(Math.random() * 100),
         delivery_id: Math.floor(Math.random() * 100),
-        schedule_date: moment(schedule).unix() // IMPORTANTE: HAY QUE PASARLE SECONDS
-      },
-      TableName: 'delivery_schedule'
+        schedule_date: 1632772616,
+        created_at: Date.now().toString()
+      }
     }
-    const result = await dynamo.put(params)
+
+    const result = await dynamo.put(params).promise()
     console.log('result - ', result)
 
     return {
       statusCode: 200,
-      body: JSON.stringify(result)
+      body: 'pioli'
     }
   } catch (error) {
     return {

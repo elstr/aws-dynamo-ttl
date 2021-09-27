@@ -10,46 +10,56 @@ provider:
   stage: ${opt:stage, 'qa'}
   deploymentBucket:
     name: pruebas-dynamo-ttl
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+      Resource: "*"  
 
 functions:
   scheduler:
     handler: src/handlers/scheduler.handler
-    Policies:
-    - Version: 2012-10-17
-      Statement:
-        - Effect: Allow
-          Action:
-          - dynamodb:GetItem
-          - dynamodb:PutItem
-          - dynamodb:UpdateItem
-          - dynamodb:Query
-          - dynamodb:Scan
-          Resource: !Join [ "", [ !GetAtt JobsTable.Arn, "*" ]]
     events:
       - http:
           path: /scheduler
           method: post
   mailer:
     handler: src/handlers/mailer.handler
+    events:
+      - stream:
+          type: dynamodb
+          arn: arn:aws:dynamodb:us-west-2:197776083821:table/deliveries-ttl/stream/2021-09-27T17:03:42.812
+            # Fn::GetAtt: [deliveryScheduleTable, Arn]
+      # - stream:
+      #     type: dynamodb
+      #     arn:
+      #       Fn::ImportValue: MyExportedDynamoDbStreamArnId
+      # - stream:
+      #     type: dynamodb
+      #     arn:
+      #       Ref: MyDynamoDbTableStreamArn
 
-resources: # CloudFormation template syntax
-  Resources:
-    deliveryScheduleTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: deliveryScheduleTable
-        TimeToLiveSpecification:
-          AttributeName: schedule_date
-          Enabled: true
-        AttributeDefinitions:
-          - AttributeName: "id"
-            AttributeType: "S"
-        KeySchema:
-          - AttributeName: "id"
-            KeyType: "HASH"
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+# resources:
+#   Resources:
+#     deliveryScheduleTable:
+#       Type: AWS::DynamoDB::Table
+#       Properties:
+#         TableName: deliveryScheduleTable
+#         TimeToLiveSpecification:
+#           AttributeName: schedule_date
+#           Enabled: true
+#         AttributeDefinitions:
+#           - AttributeName: "id"
+#             AttributeType: "S"
+#         KeySchema:
+#           - AttributeName: "id"
+#             KeyType: "HASH"
+#         ProvisionedThroughput:
+#           ReadCapacityUnits: 1
+#           WriteCapacityUnits: 1
 
 package:
   excludeDevDependencies: true
